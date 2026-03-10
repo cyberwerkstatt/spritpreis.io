@@ -31,11 +31,13 @@ async function getPricesByCity() {
 // 3. E-Control API abfragen
 async function fetchPrices(lat, lon) {
   const resultsDiv = document.getElementById("results");
+  const fuelType = document.getElementById("fuelType").value; // Wert aus Dropdown holen
+  
   resultsDiv.innerHTML = '<p class="text-center">Lade Preise...</p>';
 
   try {
     const res = await fetch(
-      `${API_BASE}/search/gas-stations/by-address?latitude=${lat}&longitude=${lon}&fuelType=DIE&includeClosed=false`
+      `${API_BASE}/search/gas-stations/by-address?latitude=${lat}&longitude=${lon}&fuelType=${fuelType}&includeClosed=false`
     );
     const stations = await res.json();
     renderStations(stations);
@@ -50,6 +52,11 @@ async function fetchPrices(lat, lon) {
 function renderStations(stations) {
   const resultsDiv = document.getElementById("results");
   resultsDiv.innerHTML = "";
+
+  if (stations.length === 0) {
+      resultsDiv.innerHTML = '<p class="text-center text-gray-500">Keine Tankstellen in der Nähe gefunden.</p>';
+      return;
+  }
 
   stations.slice(0, 10).forEach((s) => {
     const price = s.prices[0]?.amount.toFixed(3) || "N/A";
@@ -79,7 +86,6 @@ async function updateSyncInfo() {
   try {
     const res = await fetch(`${API_BASE}/monitoring`);
     const text = await res.text();
-    // Da wir wissen, dass die API Text/HTML liefert, suchen wir das Datum manuell
     const dateMatch = text.match(/Date:\s*([\d\-T\:\.]+)/);
     if (dateMatch) {
       document.getElementById(
